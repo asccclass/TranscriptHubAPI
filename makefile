@@ -8,7 +8,14 @@ MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURDIR := $(dir $(MKFILE))
 
 init:
-	GO111MODULE=on go mod download
+	go mod download
+
+tidy:
+	go mod tidy
+
+build-win: tidy
+	cls
+	go build -tags netgo -o ${APP}.exe
 
 build:
 	clear

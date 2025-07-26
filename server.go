@@ -5,7 +5,6 @@ import (
    "fmt"
    "github.com/joho/godotenv"
    "github.com/asccclass/sherryserver"
-   "github.com/asccclass/apigateway/libs/todo"
 )
 
 func main() {
@@ -37,11 +36,7 @@ func main() {
    }
 
    router := NewRouter(server, documentRoot) 
-   td, err := SherryTodo.NewTodo()
-   if err == nil {
-      td.AddRouter(router)
-   }
-   defer td.Close()
+   
    // if you have your own router add this and implement router.go
    server.Server.Handler = server.CheckCROS(router)
    server.Start()

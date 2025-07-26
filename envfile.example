@@ -1,0 +1,8 @@
+SystemName=TranscriptHubAPI
+PORT=80
+
+OriginAllowList=https://www.justdrink.com.tw;http://www.justdrink.com.tw;https://finance.justdrink.com.tw;https://www.jhupat.org.tw
+AllowMethods=POST;GET;DELETE;PUT
+
+DocumentRoot=www/html
+TemplateRoot=www/template/

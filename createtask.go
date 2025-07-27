@@ -22,6 +22,7 @@ func (app *TranscripthubService) createTask(task *Task) (error) {
 
 // 上傳檔案
 func(app *TranscripthubService) createTranscribeTask(w http.ResponseWriter, r *http.Request) {
+   fmt.Println("Received request to create transcription task")
    var err error
    MaxUploadSize := (int64)(0)
    size := os.Getenv("MaxUploadSize")

@@ -1,1 +1,755 @@
-hello world
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparrow AI 转录服务</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.10/htmx.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1f2937;
+            --success-color: #059669;
+            --error-color: #dc2626;
+            --warning-color: #d97706;
+            --background: #f8fafc;
+            --card-background: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 30px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-display {
+            padding: 12px 16px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            color: var(--text-secondary);
+            background: #f8fafc;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .file-input-display:hover, .file-input-display.dragover {
+            border-color: var(--primary-color);
+            background: #eff6ff;
+            color: var(--primary-color);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #111827;
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #dcfdf7;
+            border: 1px solid #6ee7b7;
+            color: var(--success-color);
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: var(--error-color);
+        }
+
+        .task-list {
+            background: var(--card-background);
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .task-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        .task-item:hover {
+            background: #f8fafc;
+        }
+
+        .task-info h4 {
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .task-info p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-in-progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-completed {
+            background: #dcfdf7;
+            color: #065f46;
+        }
+
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-error {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .htmx-request .loading-spinner {
+            display: inline-block;
+        }
+
+        .htmx-request .btn-text {
+            display: none;
+        }
+
+        .download-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .download-link {
+            padding: 4px 8px;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .download-link:hover {
+            background: #1d4ed8;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 AS AI 轉錄服務</h1>
+            <p>音频文件智能转录与说话人识别平台</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- 创建转录任务 -->
+            <div class="card">
+                <h2 class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+                        <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                    </svg>
+                    建立轉錄任務
+                </h2>
+                
+                <div id="create-alert" class="alert"></div>
+                
+                <form id="create-task-form" 
+                      hx-post="http://localhost/api/v1/rest/CreateTranscribeTask"
+                      hx-encoding="multipart/form-data"
+                      hx-target="#create-alert"
+                      hx-swap="innerHTML">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="label">任務標籤 *</label>
+                        <input type="text" id="label" name="label" class="form-input" 
+                               placeholder="例如：會議記錄_20241127" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="sso_account">SSO 帳戶 *</label>
+                        <input type="text" id="sso_account" name="sso_account" class="form-input" 
+                            value="andyliu@as.edu.tw" placeholder="例如：user@company.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="token">訪問Token *</label>
+                        <input type="text" id="token" name="token" class="form-input" 
+                               value="thisis@token123" placeholder="輸入訪問Token" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="task_objid">任務 ID *</label>
+                        <input type="number" id="task_objid" name="task_objid" class="form-input" 
+                               placeholder="例如：12345" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">音频文件 *</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="audiofile" name="audiofile" class="file-input" 
+                                   accept="audio/*" required>
+                            <div class="file-input-display" onclick="document.getElementById('audiofile').click()">
+                                <p>点击选择音频文件或拖拽到此处</p>
+                                <small>支持 MP3, WAV, MP4 格式</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="diarize" name="diarize" value="1" class="checkbox">
+                            <label for="diarize" class="form-label" style="margin-bottom: 0;">启用说话人识别</label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <div class="loading-spinner"></div>
+                        <span class="btn-text">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            创建任务
+                        </span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 任务管理 -->
+            <div class="card">
+                <h2 class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    任務管理
+                </h2>
+                
+                <div id="task-management-alert" class="alert"></div>
+                
+                <!-- 查看所有任務 -->
+                <form id="view-tasks-form" 
+                      hx-post="http://localhost/api/v1/rest/ViewAllTask"
+                      hx-target="#task-list-content"
+                      hx-swap="innerHTML">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="view-label">任務標籤</label>
+                        <input type="text" id="view-label" name="label" class="form-input" 
+                            value="view" placeholder="输入要查看的任務標籤">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="view-sso-account">SSO 帳戶</label>
+                        <input type="text" id="view-sso-account" name="sso_account" class="form-input" 
+                               value="andyliu@as.edu.tw" placeholder="输入 SSO 账户">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="view-token">訪問Token</label>
+                        <input type="text" id="view-token" name="token" class="form-input" 
+                              value="thisis@token123" placeholder="輸入訪問Token">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-secondary">
+                        <div class="loading-spinner"></div>
+                        <span class="btn-text">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            查看任务
+                        </span>
+                    </button>
+                </form>
+
+                <!-- 取消任务 -->
+                <form id="cancel-task-form" 
+                      hx-post="http://localhost/api/v1/rest/CancelTask"
+                      hx-target="#task-management-alert"
+                      hx-swap="innerHTML"
+                      style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="cancel-task-objid">要取消的任务 ID</label>
+                        <input type="number" id="cancel-task-objid" name="task_objid" class="form-input" 
+                               placeholder="输入任务 ID">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="cancel-label">任务标签</label>
+                        <input type="text" id="cancel-label" name="label" class="form-input" 
+                               placeholder="输入任务标签">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="cancel-sso-account">SSO 账户</label>
+                        <input type="text" id="cancel-sso-account" name="sso_account" class="form-input" 
+                               placeholder="输入 SSO 账户">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="cancel-token">访问令牌</label>
+                        <input type="text" id="cancel-token" name="token" class="form-input" 
+                               placeholder="输入访问令牌">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger">
+                        <div class="loading-spinner"></div>
+                        <span class="btn-text">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            取消任务
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 任務列表 -->
+        <div class="task-list">
+            <h2 class="card-title">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                </svg>
+                任務列表
+            </h2>
+            <div id="task-list-content">
+                <p style="text-align: center; color: var(--text-secondary); padding: 40px;">
+                    点击"查看任務"按钮加载任務列表
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File input handling
+        document.getElementById('audiofile').addEventListener('change', function(e) {
+            const display = document.querySelector('.file-input-display');
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                display.innerHTML = `
+                    <p><strong>已选择:</strong> ${file.name}</p>
+                    <small>大小: ${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                `;
+            } else {
+                display.innerHTML = `
+                    <p>点击选择音频文件或拖拽到此处</p>
+                    <small>支持 MP3, WAV, MP4 格式</small>
+                `;
+            }
+        });
+
+        // Drag and drop handling
+        const fileDisplay = document.querySelector('.file-input-display');
+        const fileInput = document.getElementById('audiofile');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileDisplay.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileDisplay.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileDisplay.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileDisplay.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            fileDisplay.classList.remove('dragover');
+        }
+
+        fileDisplay.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            
+            if (files.length > 0) {
+                const file = files[0];
+                fileDisplay.innerHTML = `
+                    <p><strong>已选择:</strong> ${file.name}</p>
+                    <small>大小: ${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                `;
+            }
+        }
+
+        // HTMX response handlers
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            const targetId = evt.target.id;
+            let alertDiv;
+            
+            if (targetId === 'create-alert') {
+                alertDiv = document.getElementById('create-alert');
+            } else if (targetId === 'task-management-alert') {
+                alertDiv = document.getElementById('task-management-alert');
+            } else {
+                alertDiv = evt.target;
+            }
+            
+            alertDiv.className = 'alert alert-error show';
+            alertDiv.innerHTML = '请求失败，请检查服务器连接和HTTPS证书设置';
+        });
+
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            // Clear previous alerts
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.classList.remove('show');
+            });
+        });
+
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.xhr.status === 200) {
+                try {
+                    const response = JSON.parse(evt.detail.xhr.responseText);
+                    
+                    if (evt.detail.target.id === 'create-alert') {
+                        const alertDiv = document.getElementById('create-alert');
+                        alertDiv.className = 'alert alert-success show';
+                        alertDiv.innerHTML = response.message || '操作成功！';
+                        
+                        // Reset form
+                        document.getElementById('create-task-form').reset();
+                        document.querySelector('.file-input-display').innerHTML = `
+                            <p>点击选择音频文件或拖拽到此处</p>
+                            <small>支持 MP3, WAV, MP4 格式</small>
+                        `;
+                    } else if (evt.detail.target.id === 'task-management-alert') {
+                        const alertDiv = document.getElementById('task-management-alert');
+                        alertDiv.className = 'alert alert-success show';
+                        alertDiv.innerHTML = response.message || '操作成功！';
+                    } else if (evt.detail.target.id === 'task-list-content') {
+                        renderTasks(response.tasks || []);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse response:', e);
+                }
+            }
+        });
+
+        function renderTasks(tasks) {
+            const container = document.getElementById('task-list-content');
+            
+            if (!tasks || tasks.length === 0) {
+                container.innerHTML = `
+                    <p style="text-align: center; color: var(--text-secondary); padding: 40px;">
+                        没有找到任务
+                    </p>
+                `;
+                return;
+            }
+
+            const taskItems = tasks.map(task => {
+                const statusClass = getStatusClass(task.status);
+                const statusText = getStatusText(task.status);
+                const downloadLinks = task.status === 2 ? generateDownloadLinks(task.filename) : '';
+                
+                return `
+                    <div class="task-item">
+                        <div class="task-info">
+                            <h4>${task.label}</h4>
+                            <p><strong>文件:</strong> ${task.filename}</p>
+                            <p><strong>账户:</strong> ${task.sso_account}</p>
+                            <p><strong>任务ID:</strong> ${task.objid}</p>
+                            <p><strong>创建时间:</strong> ${new Date(task.created_at).toLocaleString('zh-TW')}</p>
+                            ${task.diarize ? '<p><strong>说话人识别:</strong> 已启用</p>' : ''}
+                            ${downloadLinks}
+                        </div>
+                        <div class="status-badge ${statusClass}">
+                            ${statusText}
+                        </div>
+                        <div>
+                            ${task.status === 0 || task.status === 1 ? `
+                                <button class="btn btn-danger" style="font-size: 12px; padding: 6px 12px;"
+                                        onclick="cancelTask(${task.objid})">
+                                    取消
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = taskItems;
+        }
+
+        function getStatusClass(status) {
+            const statusMap = {
+                0: 'status-pending',
+                1: 'status-in-progress', 
+                2: 'status-completed',
+                3: 'status-cancelled',
+                4: 'status-error',
+                5: 'status-error'
+            };
+            return statusMap[status] || 'status-pending';
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                0: '待处理',
+                1: '处理中',
+                2: '已完成',
+                3: '已取消',
+                4: '文件错误',
+                5: '处理错误'
+            };
+            return statusMap[status] || '未知';
+        }
+
+        function generateDownloadLinks(filename) {
+            const basename = filename.replace(/\.[^/.]+$/, "");
+            const formats = ['TXT', 'SRT', 'VTT', 'TSV', 'JSON'];
+            const baseUrl = 'http://localhost/api/v1/rest/RetrieveTranscribe';
+            
+            const links = formats.map(format => 
+                `<a href="${baseUrl}/${format}/${basename}" class="download-link" target="_blank">${format}</a>`
+            ).join('');
+            
+            return `<div class="download-links"><strong>下载:</strong> ${links}</div>`;
+        }
+
+        function cancelTask(objid) {
+            if (confirm('确定要取消这个任务吗？')) {
+                // Fill the cancel form and submit it
+                document.getElementById('cancel-task-objid').value = objid;
+                document.getElementById('cancel-task-form').dispatchEvent(new Event('submit'));
+            }
+        }
+
+        // Auto-refresh task list every 30 seconds
+        setInterval(() => {
+            const viewForm = document.getElementById('view-tasks-form');
+            const label = document.getElementById('view-label').value;
+            if (label) {
+                htmx.trigger(viewForm, 'submit');
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

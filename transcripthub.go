@@ -20,7 +20,6 @@ type TranscripthubService struct {
 }
 
 func (app *TranscripthubService) AddRouter(router *http.ServeMux) {
-   // Add your API routes here
    router.HandleFunc("POST /CreateTranscribeTask", app.createTranscribeTask)
 }
 

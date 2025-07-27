@@ -6,3 +6,15 @@ AllowMethods=POST;GET;DELETE;PUT
 
 DocumentRoot=www/html
 TemplateRoot=www/template/
+
+ValidAudioTypes=mp3,mpeg,wav,mp4 # 可接受的檔案格式
+MaxUploadSize=290  #最大上傳 290MB
+
+UploadedFilesPath= C:\Users\andyl\Go\TranscriptHubAPI\upload
+
+DBMSType=sqlite
+DBSERVER=MySQLx
+DBNAME=ai_ap
+DBLOGIN=root
+DBPASSWORD=1234@5432
+DBPath=

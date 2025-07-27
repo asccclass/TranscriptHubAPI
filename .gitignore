@@ -2,3 +2,5 @@ app
 app.*
 envfile
 data
+upload
+*.log

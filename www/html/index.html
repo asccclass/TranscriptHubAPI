@@ -377,8 +377,8 @@
                     
                     <div class="form-group">
                         <label class="form-label" for="label">任務標籤 *</label>
-                        <input type="text" id="label" name="label" class="form-input" 
-                               placeholder="例如：會議記錄_20241127" required>
+                        <input type="text" id="label" name="label" class="form-input"  
+                            value="會議記錄20250728" placeholder="例如：會議記錄_20241127" required>
                     </div>
                     
                     <div class="form-group">
@@ -460,7 +460,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label" for="view-token">訪問Token</label>
+                        <label class="form-label" for="view-token">訪問 Token</label>
                         <input type="text" id="view-token" name="token" class="form-input" 
                               value="thisis@token123" placeholder="輸入訪問Token">
                     </div>
@@ -498,7 +498,7 @@
                     <div class="form-group">
                         <label class="form-label" for="cancel-sso-account">SSO 账户</label>
                         <input type="text" id="cancel-sso-account" name="sso_account" class="form-input" 
-                               placeholder="输入 SSO 账户">
+                            value="andyliu@as.edu.tw" placeholder="输入 SSO 账户">
                     </div>
                     
                     <div class="form-group">
@@ -644,6 +644,7 @@
                         alertDiv.className = 'alert alert-success show';
                         alertDiv.innerHTML = response.message || '操作成功！';
                     } else if (evt.detail.target.id === 'task-list-content') {
+                    console.log('Response:', response);
                         renderTasks(response.tasks || []);
                     }
                 } catch (e) {

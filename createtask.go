@@ -12,17 +12,16 @@ import (
 
 // Database operations
 func (app *TranscripthubService) createTask(task *Task) (error) {
-	query := `INSERT INTO tasks (objid, filename, label, sso_account, status, diarize, created_at, updated_at) 
-			  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO task (filename, label, sso_account, status, diarize, create_at) 
+			  VALUES (?, ?, ?, ?, ?, ?)`
 	
-	_, err := app.SQLiteDB.Exec(query, task.OBJID, task.Filename, task.Label, task.SSOAccount, 
-		task.Status, task.Diarize, task.CreatedAt, task.UpdatedAt)
+	_, err := app.SQLiteDB.Exec(query, task.Filename, task.Label, task.SSOAccount, 
+		task.Status, task.Diarize, task.CreatedAt)
 	return err
 }
 
 // 上傳檔案
 func(app *TranscripthubService) createTranscribeTask(w http.ResponseWriter, r *http.Request) {
-   fmt.Println("Received request to create transcription task")
    var err error
    MaxUploadSize := (int64)(0)
    size := os.Getenv("MaxUploadSize")
@@ -35,7 +34,7 @@ func(app *TranscripthubService) createTranscribeTask(w http.ResponseWriter, r *h
    }
    if err := r.ParseMultipartForm(MaxUploadSize << 20); err != nil {  // MB
       fmt.Println(err.Error())
-	  Response2User(w, "無法獲取表單資料")
+	   Response2User(w, "無法獲取表單資料")
       return
    }
 	// Get form values
@@ -87,13 +86,13 @@ func(app *TranscripthubService) createTranscribeTask(w http.ResponseWriter, r *h
 		deleteFile(filePath)  // Clean up the file if it was created
 		return
 	}
-	defer dst.Close()
 	if _, err := io.Copy(dst, file); err != nil {
 		logger.Error().Err(err).Msg("Failed to copy file")
 		Response2User(w, "無法保存檔案")
 		deleteFile(filePath)  // Clean up the file if it was created
 		return
 	}
+	dst.Close()
 
 	// Create task in database
 	task := &Task{
@@ -110,8 +109,8 @@ func(app *TranscripthubService) createTranscribeTask(w http.ResponseWriter, r *h
 		logger.Error().Err(err).Msg("Failed to create task")
 		Response2User(w, "無法創建任務")
 		deleteFile(filePath)  // Clean up the file if it was created
-		return
 	}
 	logger.Info().Int("objid", task.OBJID).Str("filename", filename).Msg("Task created successfully")
 	Response2User(w, "音頻文件上傳成功")
+	// 通知用戶 objectID
 }

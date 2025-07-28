@@ -413,8 +413,9 @@
                     
                     <div class="form-group">
                         <div class="checkbox-wrapper">
+                            <input type="hidden" name="diarize" value="0">
                             <input type="checkbox" id="diarize" name="diarize" value="1" class="checkbox">
-                            <label for="diarize" class="form-label" style="margin-bottom: 0;">启用说话人识别</label>
+                            <label for="diarize" class="form-label" style="margin-bottom: 0;">啟用多人識別</label>
                         </div>
                     </div>
                     
@@ -424,7 +425,7 @@
                             <svg class="icon" viewBox="0 0 24 24">
                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                             </svg>
-                            创建任务
+                            上傳文件
                         </span>
                     </button>
                 </form>
@@ -446,33 +447,24 @@
                       hx-post="http://localhost/api/v1/rest/ViewAllTask"
                       hx-target="#task-list-content"
                       hx-swap="innerHTML">
-                    
                     <div class="form-group">
                         <label class="form-label" for="view-label">任務標籤</label>
                         <input type="text" id="view-label" name="label" class="form-input" 
                             value="view" placeholder="输入要查看的任務標籤">
                     </div>
-                    
                     <div class="form-group">
                         <label class="form-label" for="view-sso-account">SSO 帳戶</label>
                         <input type="text" id="view-sso-account" name="sso_account" class="form-input" 
                                value="andyliu@as.edu.tw" placeholder="输入 SSO 账户">
                     </div>
-                    
                     <div class="form-group">
                         <label class="form-label" for="view-token">訪問 Token</label>
                         <input type="text" id="view-token" name="token" class="form-input" 
                               value="thisis@token123" placeholder="輸入訪問Token">
                     </div>
-                    
                     <button type="submit" class="btn btn-secondary">
                         <div class="loading-spinner"></div>
-                        <span class="btn-text">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            查看任务
-                        </span>
+                        <span class="btn-text">查看所有任務</span>
                     </button>
                 </form>
 
@@ -482,39 +474,29 @@
                       hx-target="#task-management-alert"
                       hx-swap="innerHTML"
                       style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-                    
                     <div class="form-group">
                         <label class="form-label" for="cancel-task-objid">要取消的任务 ID</label>
                         <input type="number" id="cancel-task-objid" name="task_objid" class="form-input" 
                                placeholder="输入任务 ID">
                     </div>
-                    
                     <div class="form-group">
-                        <label class="form-label" for="cancel-label">任务标签</label>
+                        <label class="form-label" for="cancel-label">任務標籤</label>
                         <input type="text" id="cancel-label" name="label" class="form-input" 
-                               placeholder="输入任务标签">
+                            value="會議記錄20250728"   placeholder="输入任務標籤">
                     </div>
-                    
                     <div class="form-group">
-                        <label class="form-label" for="cancel-sso-account">SSO 账户</label>
+                        <label class="form-label" for="cancel-sso-account">SSO 帳戶</label>
                         <input type="text" id="cancel-sso-account" name="sso_account" class="form-input" 
-                            value="andyliu@as.edu.tw" placeholder="输入 SSO 账户">
+                            value="andyliu@as.edu.tw" placeholder="輸入 SSO 帳戶">
                     </div>
-                    
                     <div class="form-group">
-                        <label class="form-label" for="cancel-token">访问令牌</label>
+                        <label class="form-label" for="cancel-token">訪問令牌</label>
                         <input type="text" id="cancel-token" name="token" class="form-input" 
-                               placeholder="输入访问令牌">
+                            value="thisis@token123" placeholder="輸入訪問令牌">
                     </div>
-                    
                     <button type="submit" class="btn btn-danger">
                         <div class="loading-spinner"></div>
-                        <span class="btn-text">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                            取消任务
-                        </span>
+                        <span class="btn-text"> 取消任務</span>
                     </button>
                 </form>
             </div>
@@ -636,16 +618,23 @@
                         // Reset form
                         document.getElementById('create-task-form').reset();
                         document.querySelector('.file-input-display').innerHTML = `
-                            <p>点击选择音频文件或拖拽到此处</p>
-                            <small>支持 MP3, WAV, MP4 格式</small>
+                            <p>點擊選擇音檔文件或拖曳至此上傳</p>
+                            <small>支援 MP3, WAV, MP4 格式</small>
                         `;
                     } else if (evt.detail.target.id === 'task-management-alert') {
                         const alertDiv = document.getElementById('task-management-alert');
                         alertDiv.className = 'alert alert-success show';
                         alertDiv.innerHTML = response.message || '操作成功！';
                     } else if (evt.detail.target.id === 'task-list-content') {
-                    console.log('Response:', response);
-                        renderTasks(response.tasks || []);
+                        if(!response) {
+                            document.getElementById('task-list-content').innerHTML = `
+                                <p style="text-align: center; color: var(--text-secondary); padding: 40px;">
+                                    目前無任務在清單中
+                                </p>
+                            `;
+                            return;
+                        }
+                        renderTasks(response || []);
                     }
                 } catch (e) {
                     console.error('Failed to parse response:', e);
@@ -655,11 +644,11 @@
 
         function renderTasks(tasks) {
             const container = document.getElementById('task-list-content');
-            
             if (!tasks || tasks.length === 0) {
                 container.innerHTML = `
                     <p style="text-align: center; color: var(--text-secondary); padding: 40px;">
-                        没有找到任务
+                        没有找到任務，請檢查您的查詢條件。
+                        <br>如果您是第一次使用，請先建立一個轉錄任務
                     </p>
                 `;
                 return;
@@ -674,11 +663,11 @@
                     <div class="task-item">
                         <div class="task-info">
                             <h4>${task.label}</h4>
-                            <p><strong>文件:</strong> ${task.filename}</p>
-                            <p><strong>账户:</strong> ${task.sso_account}</p>
-                            <p><strong>任务ID:</strong> ${task.objid}</p>
-                            <p><strong>创建时间:</strong> ${new Date(task.created_at).toLocaleString('zh-TW')}</p>
-                            ${task.diarize ? '<p><strong>说话人识别:</strong> 已启用</p>' : ''}
+                            <p><strong>檔名:</strong> ${task.filename}</p>
+                            <p><strong>上傳者:</strong> ${task.sso_account}</p>
+                            <p><strong>任務ID:</strong> ${task.objid}</p>
+                            <p><strong>創建時間:</strong> ${new Date(task.created_at).toLocaleString('zh-TW')}</p>
+                            ${task.diarize ? '<p><strong>說話人識別:</strong> 已啟用</p>' : ''}
                             ${downloadLinks}
                         </div>
                         <div class="status-badge ${statusClass}">
@@ -688,7 +677,7 @@
                             ${task.status === 0 || task.status === 1 ? `
                                 <button class="btn btn-danger" style="font-size: 12px; padding: 6px 12px;"
                                         onclick="cancelTask(${task.objid})">
-                                    取消
+                                    刪除
                                 </button>
                             ` : ''}
                         </div>
@@ -736,8 +725,7 @@
         }
 
         function cancelTask(objid) {
-            if (confirm('确定要取消这个任务吗？')) {
-                // Fill the cancel form and submit it
+            if (confirm('確定要刪除此任務？')) {
                 document.getElementById('cancel-task-objid').value = objid;
                 document.getElementById('cancel-task-form').dispatchEvent(new Event('submit'));
             }

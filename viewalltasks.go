@@ -3,9 +3,28 @@ package main
 import (
 	"fmt"
     "net/http"
+	"database/sql"
 	"encoding/json"
 )
 
+// Retrieve a specific task for a user
+func (app *TranscripthubService) getTask(sso string, taskID string) (Task, error) {
+	query := `SELECT objid, filename, label, sso_account, status, diarize, create_at FROM task WHERE sso_account = ? AND objid = ?`
+	row := app.SQLiteDB.QueryRow(query, sso, taskID)
+
+	var task Task
+	if err := row.Scan(&task.OBJID, &task.Filename, &task.Label, &task.SSOAccount,
+		&task.Status, &task.Diarize, &task.CreatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return Task{}, nil
+		}
+		fmt.Println("Error querying task:", err)
+		return Task{}, err
+	}
+	return task, nil
+}
+
+// Retrieve all tasks for a specific user
 func (app *TranscripthubService) getAllTasks(sso string) ([]Task, error) {
 	query := `SELECT objid, filename, label, sso_account, status, diarize, create_at FROM task WHERE sso_account = ?`
 	rows, err := app.SQLiteDB.Query(query, sso)
